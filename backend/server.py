@@ -111,6 +111,82 @@ def get_sales_report():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 400
 
+@app.route('/api/customers', methods=['GET'])
+def get_customers():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, contact, email FROM customers ORDER BY name")
+        rows = cursor.fetchall()
+        conn.close()
+        customers = [{"id": r["id"], "name": r["name"], "contact": r["contact"], "email": r["email"]} for r in rows]
+        return jsonify({"success": True, "customers": customers})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 400
+
+@app.route('/api/customers', methods=['POST'])
+def add_customer():
+    try:
+        data = request.json
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR IGNORE INTO customers (id, name, contact, email) VALUES (?, ?, ?, ?)",
+            (data['id'], data['name'], data.get('contact', ''), data.get('email', ''))
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 400
+
+@app.route('/api/customers/<customer_id>', methods=['DELETE'])
+def delete_customer():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 400
+
+@app.route('/api/dashboard/stats', methods=['GET'])
+def dashboard_stats():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM products")
+        total_products = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COALESCE(SUM(total_amount),0) as rev FROM orders")
+        total_revenue = cursor.fetchone()["rev"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM orders")
+        total_orders = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM customers WHERE id != 1")
+        total_customers = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM products WHERE stock < 10")
+        low_stock = cursor.fetchone()["cnt"]
+
+        conn.close()
+        return jsonify({
+            "success": True,
+            "stats": {
+                "total_products":  total_products,
+                "total_revenue":   round(float(total_revenue), 2),
+                "total_orders":    total_orders,
+                "total_customers": total_customers,
+                "low_stock":       low_stock,
+            }
+        })
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 400
+
 if __name__ == '__main__':
     init_db()
     create_user("admin", "admin123", "ADMIN")

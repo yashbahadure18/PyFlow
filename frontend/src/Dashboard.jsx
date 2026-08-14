@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
+import Home      from './Home';
 import Inventory from './Inventory';
 import Sales     from './Sales';
+import Customers from './Customers';
 import Reports   from './Reports';
 
 const NAV = [
-  { id: 'inventory', label: 'Inventory',     icon: '📦' },
-  { id: 'sales',     label: 'Point of Sale', icon: '🛒' },
-  { id: 'reports',   label: 'Sales Reports', icon: '📊' },
+  { id: 'home',      label: 'Home',           icon: '🏠' },
+  { id: 'inventory', label: 'Inventory',       icon: '📦' },
+  { id: 'sales',     label: 'Point of Sale',   icon: '🛒' },
+  { id: 'customers', label: 'Customers',       icon: '👥' },
+  { id: 'reports',   label: 'Sales Reports',   icon: '📊' },
 ];
 
 export default function Dashboard({ user, onLogout }) {
-  const [view, setView] = useState('inventory');
+  const [view, setView] = useState('home');
 
   return (
     <div className="app-root">
@@ -33,7 +37,6 @@ export default function Dashboard({ user, onLogout }) {
 
         <div className="sidebar-spacer" />
 
-        {/* User card */}
         <div className="sidebar-user">
           <div className="sidebar-avatar">
             {user.username[0].toUpperCase()}
@@ -56,8 +59,10 @@ export default function Dashboard({ user, onLogout }) {
 
       {/* ── Main Content ────────────────────── */}
       <main className="main-content">
+        {view === 'home'      && <Home      user={user} />}
         {view === 'inventory' && <Inventory />}
         {view === 'sales'     && <Sales />}
+        {view === 'customers' && <Customers />}
         {view === 'reports'   && <Reports />}
       </main>
     </div>
