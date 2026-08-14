@@ -1,0 +1,12 @@
+2026-08-12 21:21:40,872 - core.database - INFO - Database initialized successfully.
+2026-08-12 21:23:18,167 - core.database - INFO - Database initialized successfully.
+2026-08-12 21:23:18,172 - services.auth_service - INFO - User admin created successfully with role ADMIN.
+2026-08-12 21:23:18,173 - services.auth_service - INFO - User admin authenticated successfully.
+2026-08-12 21:24:05,071 - core.database - INFO - Database initialized successfully.
+2026-08-12 21:24:05,072 - services.auth_service - ERROR - Failed to create user: admin already exists.
+2026-08-12 21:24:36,306 - services.auth_service - INFO - User admin authenticated successfully.
+2026-08-12 21:28:30,523 - core.database - INFO - Database initialized successfully.
+2026-08-12 21:28:30,524 - services.auth_service - ERROR - Failed to create user: admin already exists.
+2026-08-12 23:30:30,085 - core.database - INFO - Database initialized successfully.
+2026-08-12 23:30:30,085 - services.auth_service - ERROR - Failed to create user: admin already exists.
+2026-08-12 23:30:39,279 - services.auth_service - INFO - User admin authenticated successfully.
