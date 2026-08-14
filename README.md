@@ -1,31 +1,62 @@
-# PyFlow - Python-Based Mini ERP & Inventory Management System
+# PyFlow — Python-Based Mini ERP & Inventory Management System
 
-PyFlow is a modular business management system built with Python and SQLite. It handles inventory, sales, authentication, and reporting in a single application.
+A modular, full-stack business management web application built with a **React** frontend and a **Python Flask** backend, backed by **SQLite**.
 
 ## Features
-- **Role-Based Access Control**: Admin, Manager, Employee roles.
-- **Inventory Management**: Track stock, add products, handle stock-in and stock-out.
-- **Sales & Orders**: Create orders, auto-deduct stock.
-- **Audit Logging**: All important actions are logged.
-- **Reporting**: Generate CSV reports for sales and inventory.
+- 🔐 **Authentication** — Secure login with SHA-256 salted password hashing and role-based access
+- 📦 **Inventory Management** — Add, view, and track products with live stock levels
+- 🛒 **Point of Sale** — A shopping cart interface to place orders and auto-deduct inventory
+- 📊 **Sales Reports** — View full transaction history in a clean data table
 
-## Technology Stack
-- Core Python (OOP, Decorators, Generators, Dataclasses)
-- SQLite (for persistent data)
-- Standard libraries (`hashlib`, `logging`, `csv`)
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React (Vite), HTML, Vanilla CSS |
+| Backend | Python, Flask, Flask-CORS |
+| Database | SQLite |
+| Design | Glassmorphism, Inter font, dark mode |
 
 ## Project Structure
-- `core/`: Core settings, database, security, and custom exceptions.
-- `models/`: Plain Python objects representing data entities.
-- `services/`: Business logic and database interactions.
-- `utils/`: Reusable decorators, validators, and logging.
+```
+PyFlow/
+├── backend/          # Python Flask API
+│   ├── core/         # Database, config, security
+│   ├── models/       # Data objects (User, Product, etc.)
+│   ├── services/     # Business logic (auth, inventory, sales)
+│   ├── utils/        # Decorators, logging, validators
+│   └── server.py     # Flask REST API entry point
+├── frontend/         # React application
+│   └── src/
+│       ├── App.jsx
+│       ├── Login.jsx
+│       ├── Dashboard.jsx
+│       ├── Inventory.jsx
+│       ├── Sales.jsx
+│       └── Reports.jsx
+└── main.py           # CLI interface (optional)
+```
 
 ## How to Run
-1. Navigate to the project root: `cd C:\Users\ASUS\.gemini\antigravity\scratch\PyFlow`
-2. Run `python main.py`.
-3. Default login is `admin` / `admin123`.
 
-## Architecture Decisions
-- **OOP**: Used to structure models (Product, User, Order).
-- **Decorators**: `@require_login` and `@require_role` used to cleanly secure service layer functions.
-- **SQLite**: Used instead of Python dicts to demonstrate persistent data handling.
+### 1. Start the Python Backend
+```bash
+cd backend
+pip install -r requirements.txt
+python server.py
+```
+The API will run on `http://localhost:5000`
+
+### 2. Start the React Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open the URL shown (usually `http://localhost:5173`) in your browser.
+
+### 3. Default Login
+| Field | Value |
+|---|---|
+| Username | `admin` |
+| Password | `admin123` |
