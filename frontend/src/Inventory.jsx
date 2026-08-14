@@ -2,116 +2,174 @@ import React, { useState, useEffect } from 'react';
 
 export default function Inventory() {
   const [products, setProducts] = useState([]);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newProduct, setNewProduct] = useState({ id: '', name: '', price: '', stock: '' });
+  const [showAdd, setShowAdd]   = useState(false);
+  const [form, setForm]         = useState({ id: '', name: '', category: '', price: '', stock: '', min_stock: '0' });
+  const [alert, setAlert]       = useState(null);
+  const [search, setSearch]     = useState('');
 
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/api/products');
-      const data = await res.json();
-      if (data.success) setProducts(data.products);
-    } catch (err) {
-      console.error("Failed to fetch products:", err);
-    }
+  const load = () =>
+    fetch('http://localhost:5000/api/products')
+      .then(r => r.json())
+      .then(d => { if (d.success) setProducts(d.products); });
+
+  useEffect(() => { load(); }, []);
+
+  const flash = (type, msg) => {
+    setAlert({ type, msg });
+    setTimeout(() => setAlert(null), 3500);
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const handleAddProduct = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    try {
-      const res = await fetch('http://localhost:5000/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct)
-      });
-      if (res.ok) {
-        setShowAdd(false);
-        setNewProduct({ id: '', name: '', price: '', stock: '' });
-        fetchProducts();
-      }
-    } catch (err) {
-      console.error("Failed to add product:", err);
+    const res  = await fetch('http://localhost:5000/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    if (data.success) {
+      flash('success', 'Product added successfully');
+      setShowAdd(false);
+      setForm({ id: '', name: '', category: '', price: '', stock: '', min_stock: '0' });
+      load();
+    } else {
+      flash('error', data.message);
     }
   };
+
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.category || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalProducts = products.length;
+  const totalValue    = products.reduce((s, p) => s + p.price * p.stock, 0);
+  const lowStock      = products.filter(p => p.stock < 10).length;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2>Inventory Management</h2>
-        <button onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Cancel' : '+ Add Product'}
+    <>
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <div className="page-title">Inventory Management</div>
+          <div className="page-subtitle">Track and manage your product stock levels</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowAdd(v => !v)}>
+          {showAdd ? '✕  Cancel' : '＋  Add Product'}
         </button>
       </div>
 
+      {/* Stat Cards */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon blue">📦</div>
+          <div>
+            <div className="stat-value">{totalProducts}</div>
+            <div className="stat-label">Total Products</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon green">💰</div>
+          <div>
+            <div className="stat-value">${totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+            <div className="stat-label">Inventory Value</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon red">⚠️</div>
+          <div>
+            <div className="stat-value">{lowStock}</div>
+            <div className="stat-label">Low Stock Items</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Alert */}
+      {alert && (
+        <div className={`alert alert-${alert.type}`}>
+          {alert.type === 'success' ? '✓' : '✕'} {alert.msg}
+        </div>
+      )}
+
+      {/* Add Form */}
       {showAdd && (
-        <div className="glass glass-panel" style={{ marginBottom: '2rem' }}>
-          <h3>Add New Product</h3>
-          <form onSubmit={handleAddProduct} style={{ display: 'flex', gap: '1rem', marginTop: '1rem', alignItems: 'flex-end' }}>
-            <div className="input-group" style={{ marginBottom: 0 }}>
-              <label>ID</label>
-              <input value={newProduct.id} onChange={e => setNewProduct({...newProduct, id: e.target.value})} required />
+        <div className="card" style={{ padding: '1.5rem' }}>
+          <div style={{ fontWeight: 600, marginBottom: '1rem' }}>New Product Details</div>
+          <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
+            {[['Product ID', 'id'], ['Name', 'name'], ['Category', 'category'], ['Price ($)', 'price'], ['Stock', 'stock'], ['Min Stock', 'min_stock']].map(([label, key]) => (
+              <div className="form-group" key={key}>
+                <label className="form-label">{label}</label>
+                <input
+                  className="input"
+                  placeholder={label}
+                  value={form[key]}
+                  onChange={e => setForm({ ...form, [key]: e.target.value })}
+                  required={key !== 'min_stock' && key !== 'category'}
+                />
+              </div>
+            ))}
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button className="btn btn-success w-full" type="submit">Save Product</button>
             </div>
-            <div className="input-group" style={{ marginBottom: 0 }}>
-              <label>Name</label>
-              <input value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} required />
-            </div>
-            <div className="input-group" style={{ marginBottom: 0 }}>
-              <label>Price</label>
-              <input type="number" step="0.01" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} required />
-            </div>
-            <div className="input-group" style={{ marginBottom: 0 }}>
-              <label>Stock</label>
-              <input type="number" value={newProduct.stock} onChange={e => setNewProduct({...newProduct, stock: e.target.value})} required />
-            </div>
-            <button className="success" type="submit">Save</button>
           </form>
         </div>
       )}
 
-      <div className="glass glass-panel" style={{ padding: '0 1rem' }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p.id}>
-                <td>{p.id}</td>
-                <td>{p.name}</td>
-                <td>{p.category || '-'}</td>
-                <td>${p.price.toFixed(2)}</td>
-                <td>
-                  <span style={{ 
-                    padding: '0.25rem 0.5rem', 
-                    borderRadius: '9999px', 
-                    fontSize: '0.75rem', 
-                    background: p.stock > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: p.stock > 0 ? '#34d399' : '#f87171'
-                  }}>
-                    {p.stock}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {products.length === 0 && (
+      {/* Table */}
+      <div className="card" style={{ padding: 0 }}>
+        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <input
+            className="input"
+            placeholder="🔍  Search products…"
+            style={{ maxWidth: 280 }}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <span className="text-muted">{filtered.length} items</span>
+          <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={load}>↻ Refresh</button>
+        </div>
+
+        <div className="table-wrapper">
+          <table>
+            <thead>
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                  No products found.
-                </td>
+                <th>Product ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map(p => (
+                <tr key={p.id}>
+                  <td><span className="badge badge-blue">{p.id}</span></td>
+                  <td style={{ fontWeight: 500 }}>{p.name}</td>
+                  <td className="text-muted">{p.category || '—'}</td>
+                  <td style={{ fontWeight: 600 }}>${p.price.toFixed(2)}</td>
+                  <td>{p.stock}</td>
+                  <td>
+                    <span className={`badge ${p.stock > 20 ? 'badge-green' : p.stock > 5 ? 'badge-amber' : 'badge-red'}`}>
+                      {p.stock > 20 ? 'In Stock' : p.stock > 5 ? 'Low Stock' : 'Critical'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <div className="empty-state">
+                      <div className="empty-icon">📭</div>
+                      <div className="empty-text">No products found. Add one above!</div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
